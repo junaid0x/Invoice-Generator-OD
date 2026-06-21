@@ -12,6 +12,7 @@ import DeleteModal from '../components/DeleteModal';
 import Pagination from '../components/ui/Pagination';
 import useDebounce from '../hooks/useDebounce';
 import { invoiceService } from '../services/invoiceService';
+import { api } from '../services/api';
 import { formatCurrency } from '../utils/calculations';
 
 export default function Invoices() {
@@ -43,12 +44,7 @@ export default function Invoices() {
     setIsLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/invoices?page=${currentPage}&limit=10&search=${encodeURIComponent(debouncedSearchQuery)}&status=${encodeURIComponent(statusFilter)}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const response = await res.json();
-      if (!res.ok) throw new Error(response.message || 'Failed to load invoices');
+      const response = await api.get(`/invoices?page=${currentPage}&limit=10&search=${encodeURIComponent(debouncedSearchQuery)}&status=${encodeURIComponent(statusFilter)}`);
       
       setInvoices(response.data || []);
       setTotalPages(response.meta?.totalPages || 1);

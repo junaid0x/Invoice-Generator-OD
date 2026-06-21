@@ -7,6 +7,7 @@ import Card, { CardContent, CardHeader } from '../components/ui/Card';
 import TableContainer, { TableHeader, TableRow, TableHead, TableCell } from '../components/ui/TableContainer';
 import LoadingSkeleton from '../components/ui/LoadingSkeleton';
 import EmptyState from '../components/ui/EmptyState';
+import { api } from '../services/api';
 
 const COLORS = ['#8B3DFF', '#EAB308', '#22C55E', '#EF4444', '#6B7280'];
 
@@ -43,18 +44,10 @@ export default function Reports() {
         }
       }
 
-      const token = localStorage.getItem('token');
-      const headers = { 'Authorization': `Bearer ${token}` };
-      
-      const [reportsRes, revenueRes] = await Promise.all([
-        fetch(`http://localhost:5000/api/reports${queryStr}`, { headers }),
-        fetch('http://localhost:5000/api/reports/revenue', { headers }) // Revenue is always current year
+      const [reports, revenue] = await Promise.all([
+        api.get(`/reports${queryStr}`),
+        api.get('/reports/revenue') // Revenue is always current year
       ]);
-
-      if (!reportsRes.ok || !revenueRes.ok) throw new Error('Failed to load report data');
-
-      const reports = await reportsRes.json();
-      const revenue = await revenueRes.json();
 
       setReportsData(reports);
       setRevenueData(revenue);

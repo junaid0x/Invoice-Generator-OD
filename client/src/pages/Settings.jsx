@@ -7,6 +7,7 @@ import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import LoadingSkeleton from '../components/ui/LoadingSkeleton';
 import EmptyState from '../components/ui/EmptyState';
+import { api, getAssetUrl } from '../services/api';
 
 export default function Settings() {
   const [settings, setSettings] = useState(null);
@@ -47,14 +48,7 @@ export default function Settings() {
   const fetchSettings = async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/settings', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!res.ok) throw new Error('Failed to load settings');
-      const data = await res.json();
+      const data = await api.get('/settings');
       setSettings(data);
       setInitialSettings(data);
     } catch (err) {
@@ -73,19 +67,8 @@ export default function Settings() {
     try {
       setIsSaving(true);
       setError(null);
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(settings)
-      });
+      const data = await api.put('/settings', settings);
       
-      if (!res.ok) throw new Error('Failed to save settings');
-      
-      const data = await res.json();
       setSettings(data.settings);
       setInitialSettings(data.settings);
       setSuccess(true);
@@ -107,12 +90,12 @@ export default function Settings() {
 
     try {
       setUploadingLogo(true);
+      // Fetch with FormData can't use our simple api helper directly if it stringifies, 
+      // but api.js handles headers. However for FormData, Content-Type must be omitted to let browser set boundary.
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/settings/upload-logo', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/settings/upload-logo`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       });
 
@@ -131,15 +114,7 @@ export default function Settings() {
     try {
       setIsTestingEmail(true);
       setTestEmailStatus(null);
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/settings/test-email', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to send test email');
+      await api.post('/settings/test-email', {});
       setTestEmailStatus({ type: 'success', message: 'Test email sent successfully!' });
       setTimeout(() => setTestEmailStatus(null), 5000);
     } catch (err) {
@@ -169,21 +144,10 @@ export default function Settings() {
 
     try {
       setIsChangingPassword(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/auth/change-password', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
-        })
+      await api.put('/auth/change-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to change password');
 
       setPasswordSuccess('Password updated successfully.');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -349,7 +313,7 @@ export default function Settings() {
                 <div className="flex items-center gap-4">
                   <div className="h-16 w-32 bg-secondary/50 border border-border rounded flex items-center justify-center overflow-hidden">
                     {settings?.logo_url ? (
-                      <img src={settings.logo_url.startsWith('http') || settings.logo_url.startsWith('/') ? settings.logo_url : `http://localhost:5000${settings.logo_url}`} alt="Logo" className="max-h-full max-w-full object-contain" />
+                      <img src={getAssetUrl(settings.logo_url)} alt="Logo" className="max-h-full max-w-full object-contain" />
                     ) : (
                       <span className="text-text-secondary text-xs">No Logo</span>
                     )}

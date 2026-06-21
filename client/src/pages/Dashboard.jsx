@@ -8,6 +8,7 @@ import LoadingSkeleton from '../components/ui/LoadingSkeleton';
 import Badge from '../components/ui/Badge';
 import TableContainer, { TableHead, TableRow, TableHeader, TableCell } from '../components/ui/TableContainer';
 import { Users, FileText, Clock, AlertCircle, DollarSign, Plus, Eye } from 'lucide-react';
+import { api } from '../services/api';
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
@@ -17,18 +18,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/dashboard', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
-        }
-
-        const result = await response.json();
+        const result = await api.get('/dashboard');
         setData(result);
       } catch (err) {
         setError(err.message);

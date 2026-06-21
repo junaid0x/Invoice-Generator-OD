@@ -1,5 +1,6 @@
 // React auto-imported
 import { formatCurrency } from '../../utils/calculations';
+import { getAssetUrl } from '../../services/api';
 
 export default function InvoicePreviewDocument({ invoice, customer, settings }) {
   return (
@@ -7,7 +8,7 @@ export default function InvoicePreviewDocument({ invoice, customer, settings }) 
       <div className="flex justify-between items-start mb-8">
         <div>
           {settings?.logo_url ? (
-            <img src={settings.logo_url.startsWith('http') || settings.logo_url.startsWith('/') ? settings.logo_url : `http://localhost:5000${settings.logo_url}`} alt={settings?.company_name || 'Company Logo'} className="h-24 object-contain mb-8" style={{ imageRendering: 'high-quality' }} />
+            <img src={getAssetUrl(settings.logo_url)} alt={settings?.company_name || 'Company Logo'} className="h-24 object-contain mb-8" style={{ imageRendering: 'high-quality' }} />
           ) : (
             <h2 className="text-2xl font-bold text-[#111827] mb-8">{settings?.company_name || 'Company Name'}</h2>
           )}

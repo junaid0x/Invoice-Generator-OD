@@ -12,6 +12,7 @@ import DeleteModal from '../components/DeleteModal';
 import Pagination from '../components/ui/Pagination';
 import useDebounce from '../hooks/useDebounce';
 import { customerService } from '../services/customerService';
+import { api } from '../services/api';
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -40,13 +41,7 @@ export default function Customers() {
     setIsLoading(true);
     setError(null);
     try {
-      // Create a URLSearchParams equivalent manually since our service might just take query strings
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/customers?page=${currentPage}&limit=10&search=${encodeURIComponent(debouncedSearchQuery)}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const response = await res.json();
-      if (!res.ok) throw new Error(response.message || 'Failed to load customers');
+      const response = await api.get(`/customers?page=${currentPage}&limit=10&search=${encodeURIComponent(debouncedSearchQuery)}`);
       
       setCustomers(response.data || []);
       setTotalPages(response.meta?.totalPages || 1);

@@ -16,6 +16,7 @@ import LoadingSkeleton from '../components/ui/LoadingSkeleton';
 
 import { customerService } from '../services/customerService';
 import { invoiceService } from '../services/invoiceService';
+import { api, getAssetUrl } from '../services/api';
 import { calculateSubtotal, calculateGrandTotal } from '../utils/calculations';
 import PdfActions from '../components/invoice/PdfActions';
 
@@ -53,11 +54,7 @@ export default function InvoiceBuilder() {
         const custRes = await customerService.getAll();
         setCustomers(custRes.data);
 
-        const token = localStorage.getItem('token');
-        const settingsRes = await fetch('http://localhost:5000/api/settings', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const settingsData = await settingsRes.json();
+        const settingsData = await api.get('/settings');
         setSettings(settingsData);
 
         if (id) {
@@ -214,7 +211,7 @@ export default function InvoiceBuilder() {
         <InvoiceDocumentLayout 
           headerLeft={
             settings?.logo_url ? (
-              <img src={settings.logo_url.startsWith('http') || settings.logo_url.startsWith('/') ? settings.logo_url : `http://localhost:5000${settings.logo_url}`} alt={settings?.company_name || 'Company Logo'} className="h-12 object-contain" />
+              <img src={getAssetUrl(settings.logo_url)} alt={settings?.company_name || 'Company Logo'} className="h-12 object-contain" />
             ) : (
               <h2 className="text-xl font-bold text-white">{settings?.company_name || 'Company Name'}</h2>
             )

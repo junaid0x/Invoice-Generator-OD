@@ -1,9 +1,17 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
+export const getAssetUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  
+  const baseUrl = API_URL.replace(/\/api\/?$/, '');
+  return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+};
 
 export const api = {
   async request(endpoint, options = {}) {
     const token = localStorage.getItem('token');
-    
+
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,

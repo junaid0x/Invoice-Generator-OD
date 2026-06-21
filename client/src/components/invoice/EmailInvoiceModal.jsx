@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Mail, Send, X, AlertCircle } from 'lucide-react';
 import { generateInvoicePDF } from '../../utils/pdfGenerator';
+import { api } from '../../services/api';
 
 export default function EmailInvoiceModal({ isOpen, onClose, invoice, customer }) {
   const [toEmail, setToEmail] = useState('');
@@ -37,33 +38,19 @@ export default function EmailInvoiceModal({ isOpen, onClose, invoice, customer }
       const { base64Pdf } = await generateInvoicePDF(invoice, 'pdf-invoice-container', { download: false });
 
       // Send to backend
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/invoices/${invoice.id}/email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          toEmail,
-          subject,
-          message,
-          base64Pdf
-        })
+      await api.post(`/invoices/${invoice.id}/email`, {
+        toEmail,
+        subject,
+        message,
+        base64Pdf
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to send email.');
-      }
 
       setSuccess(true);
       setTimeout(() => {
         onClose();
       }, 2000);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to send email.');
     } finally {
       setIsSending(false);
     }

@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS `ocean_invoice_suite` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `ocean_invoice_suite`;
+-- CREATE DATABASE IF NOT EXISTS `ocean_invoice_suite` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE `ocean_invoice_suite`;
 
 CREATE TABLE IF NOT EXISTS `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
