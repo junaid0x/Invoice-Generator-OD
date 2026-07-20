@@ -14,7 +14,7 @@ const updateSettings = async (data) => {
     
     if (existing.length === 0) {
       // Insert if not exists
-      const fields = Object.keys(data).filter(key => key !== 'id');
+      const fields = Object.keys(data).filter(key => !['id', 'created_at', 'updated_at'].includes(key));
       const values = fields.map(key => data[key]);
       const placeholders = fields.map(() => '?').join(', ');
       
@@ -26,7 +26,7 @@ const updateSettings = async (data) => {
       }
     } else {
       // Update
-      const fields = Object.keys(data).filter(key => key !== 'id' && data[key] !== undefined);
+      const fields = Object.keys(data).filter(key => !['id', 'created_at', 'updated_at'].includes(key) && data[key] !== undefined);
       if (fields.length > 0) {
         const setClause = fields.map(key => `${key} = ?`).join(', ');
         const values = fields.map(key => data[key]);

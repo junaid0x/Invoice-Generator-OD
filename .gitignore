@@ -114,3 +114,4 @@ dist
 # Project specific
 server/uploads/
 client/dist/
+docs

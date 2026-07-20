@@ -125,23 +125,7 @@ const emailInvoice = async (req, res, next) => {
       throw error;
     }
 
-    const nodemailer = require('nodemailer');
-
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-      const error = new Error('SMTP is not configured in server/.env file.');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT || 587,
-      secure: parseInt(process.env.SMTP_PORT) === 465,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    });
+    const mailService = require('../services/mailService');
 
     const pdfBuffer = Buffer.from(base64Pdf.split('base64,')[1] || base64Pdf, 'base64');
 
@@ -159,7 +143,7 @@ const emailInvoice = async (req, res, next) => {
       ]
     };
 
-    await transporter.sendMail(mailOptions);
+    await mailService.sendMail(mailOptions);
 
     res.status(200).json({
       success: true,

@@ -39,24 +39,8 @@ const uploadLogo = async (req, res) => {
 
 const testEmail = async (req, res, next) => {
   try {
-    const nodemailer = require('nodemailer');
+    const mailService = require('../services/mailService');
     
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-      const error = new Error('SMTP is not fully configured in server/.env file.');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT || 587,
-      secure: parseInt(process.env.SMTP_PORT) === 465,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    });
-
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: req.user ? req.user.email : process.env.SMTP_USER, // Send to current admin or self
@@ -65,7 +49,7 @@ const testEmail = async (req, res, next) => {
       html: '<h3>Congratulations!</h3><p>Your SMTP email configuration is working perfectly.</p>'
     };
 
-    await transporter.sendMail(mailOptions);
+    await mailService.sendMail(mailOptions);
 
     res.status(200).json({
       success: true,
