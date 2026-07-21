@@ -43,6 +43,7 @@ export default function InvoiceBuilder() {
     tax: 0,
     discount: 0,
     shipping: 0,
+    advance_amount: 0,
     total: 0
   });
 
@@ -89,14 +90,14 @@ export default function InvoiceBuilder() {
 
   useEffect(() => {
     const subtotal = calculateSubtotal(invoice.items);
-    const total = calculateGrandTotal(subtotal, invoice.tax, invoice.discount, invoice.shipping);
+    const total = calculateGrandTotal(subtotal, invoice.tax, invoice.discount, invoice.shipping, invoice.advance_amount);
     
     if (subtotal !== invoice.subtotal || total !== invoice.total) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setInvoice(prev => ({ ...prev, subtotal, total }));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [invoice.items, invoice.tax, invoice.discount, invoice.shipping]);
+  }, [invoice.items, invoice.tax, invoice.discount, invoice.shipping, invoice.advance_amount]);
 
   const validate = () => {
     const newErrors = {};
@@ -104,6 +105,12 @@ export default function InvoiceBuilder() {
     if (!invoice.invoice_date) newErrors.invoice_date = 'Invoice date is required';
     if (!invoice.due_date) newErrors.due_date = 'Due date is required';
     
+    if (invoice.advance_amount < 0) {
+      newErrors.advance_amount = 'Cannot be negative';
+    } else if (invoice.advance_amount > invoice.subtotal) {
+      newErrors.advance_amount = 'Cannot exceed subtotal';
+    }
+
     invoice.items.forEach((item, idx) => {
       if (!item.description) newErrors[`items.${idx}.description`] = 'Required';
       if (item.quantity <= 0) newErrors[`items.${idx}.quantity`] = 'Must be > 0';

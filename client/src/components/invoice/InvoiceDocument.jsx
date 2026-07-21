@@ -93,8 +93,14 @@ export default function InvoiceDocument({ invoice, customer, settings }) {
               <span>{formatCurrency(invoice.shipping, invoice.currency)}</span>
             </div>
           )}
+          {invoice.advance_amount > 0 && (
+            <div className="flex justify-between items-center py-2.5 text-sm text-gray-600">
+              <span>Advance Received</span>
+              <span>-{formatCurrency(invoice.advance_amount, invoice.currency)}</span>
+            </div>
+          )}
           <div className="flex justify-between items-center py-4 border-t-2 border-gray-800 mt-2 text-xl font-bold text-gray-800">
-            <span>Total</span>
+            <span>Grand Total</span>
             <span>{formatCurrency(invoice.total, invoice.currency)}</span>
           </div>
         </div>

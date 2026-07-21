@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import Customers from './pages/Customers';
 import Invoices from './pages/Invoices';
 import Reports from './pages/Reports';
+import Subscriptions from './pages/Subscriptions';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import DesignPreview from './pages/DesignPreview';
@@ -22,6 +23,7 @@ function App() {
             <Route path="customers" element={<Customers />} />
             <Route path="invoices" element={<Invoices />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="subscriptions" element={<Subscriptions />} />
             <Route path="settings" element={<Settings />} />
             <Route path="design-preview" element={<DesignPreview />} />
             <Route path="invoice-builder" element={<InvoiceBuilder />} />

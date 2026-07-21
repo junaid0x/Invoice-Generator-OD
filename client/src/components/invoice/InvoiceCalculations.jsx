@@ -47,6 +47,18 @@ export default function InvoiceCalculations({ data, onChange }) {
           />
         </div>
         
+        <div className="flex justify-between items-center py-1.5 gap-4">
+          <span className="text-text-secondary font-medium tracking-wide whitespace-nowrap">Advance Received</span>
+          <input 
+            type="number"
+            min="0"
+            max={data.subtotal}
+            value={data.advance_amount}
+            onChange={(e) => updateField('advance_amount', e.target.value)}
+            className="w-24 bg-secondary/50 border border-border rounded px-2 py-1 text-right text-white focus:border-primary outline-none transition-colors"
+          />
+        </div>
+
         <div className="pt-4 mt-2 border-t-2 border-border/80 flex justify-between items-center">
           <span className="text-base font-bold text-white tracking-wide uppercase">Grand Total</span>
           <span className="text-xl font-bold text-primary whitespace-nowrap">{formatCurrency(data.total, data.currency)}</span>

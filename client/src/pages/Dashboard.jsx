@@ -7,7 +7,7 @@ import EmptyState from '../components/ui/EmptyState';
 import LoadingSkeleton from '../components/ui/LoadingSkeleton';
 import Badge from '../components/ui/Badge';
 import TableContainer, { TableHead, TableRow, TableHeader, TableCell } from '../components/ui/TableContainer';
-import { Users, FileText, Clock, AlertCircle, DollarSign, Plus, Eye } from 'lucide-react';
+import { Users, FileText, Clock, AlertCircle, DollarSign, Plus, Eye, Repeat } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function Dashboard() {
@@ -77,7 +77,7 @@ export default function Dashboard() {
     );
   }
 
-  const { topStats, recent_invoices, recent_customers } = data;
+  const { topStats, recent_invoices, recent_customers, upcoming_renewals } = data;
 
   return (
     <div>
@@ -227,6 +227,58 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* UPCOMING RENEWALS */}
+        {upcoming_renewals && upcoming_renewals.length > 0 && (
+          <div className="mb-8">
+            <Card className="border-warning/30 bg-warning/5">
+              <CardHeader className="flex justify-between items-center py-4 border-b border-warning/10">
+                <h3 className="text-lg font-medium text-warning flex items-center gap-2">
+                  <AlertCircle size={18} />
+                  Upcoming Renewals
+                </h3>
+                <Link to="/subscriptions" className="text-sm text-warning hover:text-white transition-colors flex items-center gap-1">
+                  View all <Eye size={14} />
+                </Link>
+              </CardHeader>
+              <CardContent className="p-0 overflow-hidden">
+                <TableContainer className="border-none rounded-none">
+                  <TableHead>
+                    <TableRow>
+                      <TableHeader className="text-warning">Client</TableHeader>
+                      <TableHeader className="text-warning">Service</TableHeader>
+                      <TableHeader className="text-warning">Date</TableHeader>
+                      <TableHeader className="text-warning text-right">Remaining</TableHeader>
+                    </TableRow>
+                  </TableHead>
+                  <tbody>
+                    {upcoming_renewals.map((sub) => (
+                      <TableRow key={sub.id} className="hover:bg-warning/10 border-warning/10">
+                        <TableCell className="font-medium text-white">{sub.customer_name}</TableCell>
+                        <TableCell>
+                          <div className="text-white font-medium">{sub.service_type}</div>
+                          <div className="text-xs text-text-secondary">{sub.service_name}</div>
+                        </TableCell>
+                        <TableCell>
+                          {sub.service_type === 'Website Maintenance' && sub.contract_end 
+                            ? new Date(sub.contract_end).toLocaleDateString()
+                            : sub.renewal_date 
+                              ? new Date(sub.renewal_date).toLocaleDateString() 
+                              : '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={sub.days_remaining <= 7 ? 'danger' : 'warning'}>
+                            {sub.days_remaining === 0 ? 'Today' : `${sub.days_remaining} Days`}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* FOURTH ROW: Quick Actions */}
         <h3 className="text-lg font-medium text-white mb-4">Quick Actions</h3>

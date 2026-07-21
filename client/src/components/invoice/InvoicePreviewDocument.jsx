@@ -110,8 +110,14 @@ export default function InvoicePreviewDocument({ invoice, customer, settings }) 
                 <span className="text-[#111827]">{formatCurrency(invoice.shipping, invoice.currency)}</span>
               </div>
             )}
+            {invoice.advance_amount > 0 && (
+              <div className="flex justify-between items-center py-3 text-sm font-medium text-[#374151]">
+                <span>Advance Received</span>
+                <span className="text-[#111827]">-{formatCurrency(invoice.advance_amount, invoice.currency)}</span>
+              </div>
+            )}
             <div className="flex justify-between items-end pt-6 mt-4 border-t-2 border-[#8B3DFF]">
-              <span className="text-[#111827] font-extrabold text-sm uppercase tracking-wider">Total</span>
+              <span className="text-[#111827] font-extrabold text-sm uppercase tracking-wider">Grand Total</span>
               <span className="text-3xl font-extrabold text-[#111827] tracking-tight">{formatCurrency(invoice.total, invoice.currency)}</span>
             </div>
           </div>

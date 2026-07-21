@@ -11,6 +11,7 @@ const invoiceRoutes = require('./routes/invoiceRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const reportsRoutes = require('./routes/reportsRoutes');
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
 dotenv.config();
 
@@ -23,9 +24,10 @@ app.use(cors());
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  max: 1000, // Increased limit for development
   standardHeaders: true,
   legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' }
 });
 app.use('/api', limiter);
 
@@ -42,6 +44,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 app.use(errorHandler);
 

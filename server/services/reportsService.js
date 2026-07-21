@@ -1,4 +1,5 @@
 const db = require('../database/db');
+const subscriptionService = require('./subscriptionService');
 
 const getReportSummary = async (startDate, endDate) => {
   let dateFilter = '';
@@ -63,6 +64,17 @@ const getReportSummary = async (startDate, endDate) => {
   const [[settings]] = await db.query(`SELECT currency FROM settings WHERE id = 1`);
   const currency = settings?.currency || 'CAD';
 
+  // 5. Subscription Stats
+  const allSubs = await subscriptionService.getAllSubscriptions();
+  const subscriptionStats = {
+    total: allSubs.length,
+    hosting: allSubs.filter(s => s.service_type === 'Hosting').length,
+    email: allSubs.filter(s => s.service_type === 'Business Email').length,
+    maintenance: allSubs.filter(s => s.service_type === 'Website Maintenance').length,
+    expiring_soon: allSubs.filter(s => ['Expiring Soon', 'Free Maintenance ending soon'].includes(s.status) || (s.days_remaining !== null && s.days_remaining <= 30 && s.days_remaining >= 0)).length,
+    expired: allSubs.filter(s => ['Expired', 'Maintenance Contract Expired', 'No Active Contract'].includes(s.status) || (s.days_remaining !== null && s.days_remaining < 0)).length,
+  };
+
   return {
     summary: {
       total_revenue,
@@ -82,7 +94,8 @@ const getReportSummary = async (startDate, endDate) => {
       ...c,
       revenue_generated: parseFloat(c.revenue_generated || 0)
     })),
-    currency
+    currency,
+    subscriptionStats
   };
 };
 

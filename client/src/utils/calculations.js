@@ -9,14 +9,15 @@ export const calculateSubtotal = (items) => {
   return items.reduce((sum, item) => sum + calculateItemAmount(item.quantity, item.rate), 0);
 };
 
-export const calculateGrandTotal = (subtotal, taxPercent, discount, shipping) => {
+export const calculateGrandTotal = (subtotal, taxPercent, discount, shipping, advanceAmount) => {
   const s = parseFloat(subtotal) || 0;
   const t = parseFloat(taxPercent) || 0;
   const d = parseFloat(discount) || 0;
   const sh = parseFloat(shipping) || 0;
+  const adv = parseFloat(advanceAmount) || 0;
   
   const taxAmount = s * (t / 100);
-  return s + taxAmount + sh - d;
+  return s + taxAmount + sh - d - adv;
 };
 
 export const formatCurrency = (amount, currency = 'CAD') => {

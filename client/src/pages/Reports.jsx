@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
-import { Calendar, DollarSign, FileText, AlertCircle, CheckCircle, Clock, PieChart } from 'lucide-react';
+import { Calendar, DollarSign, FileText, AlertCircle, CheckCircle, Clock, PieChart, Repeat, Server, Mail, Globe, Clock4 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import SectionContainer from '../components/ui/SectionContainer';
 import Card, { CardContent, CardHeader } from '../components/ui/Card';
@@ -119,7 +119,7 @@ export default function Reports() {
     );
   }
 
-  const { summary, statistics, topCustomers, currency } = reportsData || {};
+  const { summary, statistics, topCustomers, currency, subscriptionStats } = reportsData || {};
 
   const statusPieData = statistics ? [
     { name: 'Paid', value: statistics.paid_count },
@@ -195,6 +195,32 @@ export default function Reports() {
           </Card>
         ))}
       </div>
+
+      {/* Subscription Stats Cards */}
+      {subscriptionStats && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+          {[
+            { label: 'Total Subscriptions', value: subscriptionStats.total, icon: Repeat, color: 'text-primary' },
+            { label: 'Hosting', value: subscriptionStats.hosting, icon: Server, color: 'text-white' },
+            { label: 'Business Email', value: subscriptionStats.email, icon: Mail, color: 'text-white' },
+            { label: 'Website Maintenance', value: subscriptionStats.maintenance, icon: Globe, color: 'text-white' },
+            { label: 'Expiring Soon', value: subscriptionStats.expiring_soon, icon: Clock4, color: 'text-warning' },
+            { label: 'Expired', value: subscriptionStats.expired, icon: AlertCircle, color: 'text-danger' }
+          ].map((card, idx) => (
+            <Card key={idx} className="bg-card">
+              <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
+                <div className="flex justify-between items-start">
+                  <span className="text-sm font-medium text-text-secondary">{card.label}</span>
+                  <card.icon size={18} className={card.color} />
+                </div>
+                <h3 className={`text-2xl font-bold tracking-tight ${card.color === 'text-white' ? 'text-white' : card.color}`}>
+                  {card.value || 0}
+                </h3>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

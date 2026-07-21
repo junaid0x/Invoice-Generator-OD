@@ -1,23 +1,45 @@
 const db = require('../database/db');
 
 const generateInvoiceNumber = async () => {
-  const [settings] = await db.query('SELECT invoice_prefix, starting_number FROM settings WHERE id = 1');
-  const prefix = settings[0]?.invoice_prefix || 'OD-';
-  const startNum = settings[0]?.starting_number || 1;
+  const today = new Date();
+  const yy = String(today.getFullYear()).slice(-2);
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const datePrefix = `OD-${yy}${mm}${dd}-`;
+
+  let newNumber = 0;
   
   const [rows] = await db.query(
     `SELECT invoice_number FROM invoices WHERE invoice_number LIKE ? ORDER BY id DESC LIMIT 1`,
-    [`${prefix}%`]
+    [`${datePrefix}%`]
   );
-  
+
   if (rows.length === 0) {
-    return `${prefix}${String(startNum).padStart(4, '0')}`;
+    newNumber = Math.floor(Math.random() * (6000 - 4000 + 1)) + 4000;
+  } else {
+    const lastNumberStr = rows[0].invoice_number.replace(datePrefix, '');
+    const lastNumber = parseInt(lastNumberStr, 10) || 4000;
+    const increment = Math.floor(Math.random() * (15 - 2 + 1)) + 2;
+    newNumber = lastNumber + increment;
   }
-  
-  const lastNumberStr = rows[0].invoice_number.replace(prefix, '');
-  const nextNumber = Math.max(parseInt(lastNumberStr, 10) + 1, startNum);
-  const paddedNumber = String(nextNumber).padStart(4, '0');
-  return `${prefix}${paddedNumber}`;
+
+  let isUnique = false;
+  let finalInvoiceNumber = '';
+
+  while (!isUnique) {
+    finalInvoiceNumber = `${datePrefix}${String(newNumber).padStart(4, '0')}`;
+    const [existing] = await db.query(
+      `SELECT id FROM invoices WHERE invoice_number = ? LIMIT 1`,
+      [finalInvoiceNumber]
+    );
+    if (existing.length === 0) {
+      isUnique = true;
+    } else {
+      newNumber++;
+    }
+  }
+
+  return finalInvoiceNumber;
 };
 
 const getAllInvoices = async (page = 1, limit = 10, search = '', status = 'All') => {
@@ -87,7 +109,7 @@ const getInvoiceById = async (id) => {
 };
 
 const createInvoice = async (data) => {
-  const { customer_id, invoice_date, due_date, currency, subtotal, tax, discount, shipping, total, status, notes, terms, items } = data;
+  const { customer_id, invoice_date, due_date, currency, subtotal, tax, discount, shipping, advance_amount, total, status, notes, terms, items } = data;
   
   const invoice_number = await generateInvoiceNumber();
   
@@ -100,9 +122,9 @@ const createInvoice = async (data) => {
 
     const [result] = await connection.query(
       `INSERT INTO invoices 
-      (invoice_number, customer_id, invoice_date, due_date, currency, subtotal, tax, discount, shipping, total, status, notes, terms) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [invoice_number, customer_id, invoice_date, due_date, currency || defaultCurrency, subtotal || 0, tax || 0, discount || 0, shipping || 0, total || 0, status || 'draft', notes || '', terms || '']
+      (invoice_number, customer_id, invoice_date, due_date, currency, subtotal, tax, discount, shipping, advance_amount, total, status, notes, terms) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [invoice_number, customer_id, invoice_date, due_date, currency || defaultCurrency, subtotal || 0, tax || 0, discount || 0, shipping || 0, advance_amount || 0, total || 0, status || 'draft', notes || '', terms || '']
     );
     
     const invoiceId = result.insertId;
@@ -127,7 +149,7 @@ const createInvoice = async (data) => {
 };
 
 const updateInvoice = async (id, data) => {
-  const { customer_id, invoice_date, due_date, currency, subtotal, tax, discount, shipping, total, status, notes, terms, items } = data;
+  const { customer_id, invoice_date, due_date, currency, subtotal, tax, discount, shipping, advance_amount, total, status, notes, terms, items } = data;
   
   const connection = await db.getConnection();
   try {
@@ -144,6 +166,7 @@ const updateInvoice = async (id, data) => {
     if (tax !== undefined) { fields.push('tax = ?'); values.push(tax); }
     if (discount !== undefined) { fields.push('discount = ?'); values.push(discount); }
     if (shipping !== undefined) { fields.push('shipping = ?'); values.push(shipping); }
+    if (advance_amount !== undefined) { fields.push('advance_amount = ?'); values.push(advance_amount); }
     if (total !== undefined) { fields.push('total = ?'); values.push(total); }
     if (status !== undefined) { fields.push('status = ?'); values.push(status); }
     if (notes !== undefined) { fields.push('notes = ?'); values.push(notes); }

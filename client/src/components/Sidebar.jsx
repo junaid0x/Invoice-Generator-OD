@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, BarChart3, Settings, X } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, BarChart3, Settings, X, Repeat } from 'lucide-react';
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
   const navItems = [
@@ -7,6 +7,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     { name: 'Customers', path: '/customers', icon: Users },
     { name: 'Invoices', path: '/invoices', icon: FileText },
     { name: 'Reports', path: '/reports', icon: BarChart3 },
+    { name: 'Subscriptions', path: '/subscriptions', icon: Repeat },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
 

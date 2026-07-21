@@ -1,4 +1,5 @@
 const db = require('../database/db');
+const subscriptionService = require('./subscriptionService');
 
 const getDashboardData = async () => {
   try {
@@ -58,6 +59,13 @@ const getDashboardData = async () => {
       LIMIT 5
     `);
 
+    // 8. Upcoming Renewals (Subscriptions expiring within 30 days)
+    const allSubs = await subscriptionService.getAllSubscriptions();
+    const upcoming_renewals = allSubs
+      .filter(s => s.days_remaining !== null && s.days_remaining >= 0 && s.days_remaining <= 30)
+      .sort((a, b) => a.days_remaining - b.days_remaining)
+      .slice(0, 5);
+
     return {
       topStats: {
         total_customers: parseInt(total_customers, 10),
@@ -68,7 +76,8 @@ const getDashboardData = async () => {
         currency
       },
       recent_invoices,
-      recent_customers
+      recent_customers,
+      upcoming_renewals
     };
   } catch (error) {
     console.error('Error fetching dashboard data:', error);

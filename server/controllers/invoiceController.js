@@ -30,10 +30,16 @@ const getInvoice = async (req, res, next) => {
 
 const createInvoice = async (req, res, next) => {
   try {
-    const { subtotal, tax, discount, shipping, total, items } = req.body;
+    const { subtotal, tax, discount, shipping, advance_amount, total, items } = req.body;
     
-    if (subtotal < 0 || tax < 0 || discount < 0 || shipping < 0 || total < 0) {
+    if (subtotal < 0 || tax < 0 || discount < 0 || shipping < 0 || (advance_amount !== undefined && advance_amount < 0) || total < 0) {
       const error = new Error('Financial amounts cannot be negative');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (advance_amount !== undefined && advance_amount > subtotal) {
+      const error = new Error('Advance amount cannot exceed subtotal');
       error.statusCode = 400;
       throw error;
     }
@@ -54,14 +60,21 @@ const createInvoice = async (req, res, next) => {
 
 const updateInvoice = async (req, res, next) => {
   try {
-    const { subtotal, tax, discount, shipping, total, items } = req.body;
+    const { subtotal, tax, discount, shipping, advance_amount, total, items } = req.body;
     
     if ((subtotal !== undefined && subtotal < 0) || 
         (tax !== undefined && tax < 0) || 
         (discount !== undefined && discount < 0) || 
         (shipping !== undefined && shipping < 0) || 
+        (advance_amount !== undefined && advance_amount < 0) || 
         (total !== undefined && total < 0)) {
       const error = new Error('Financial amounts cannot be negative');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (advance_amount !== undefined && subtotal !== undefined && advance_amount > subtotal) {
+      const error = new Error('Advance amount cannot exceed subtotal');
       error.statusCode = 400;
       throw error;
     }
