@@ -17,8 +17,8 @@ const getReportSummary = async (startDate, endDate, isDemo = 0) => {
   const sqlSummary = `
     SELECT 
       SUM(CASE WHEN status = 'paid' THEN total ELSE 0 END) AS paid_amount,
-      SUM(CASE WHEN status = 'pending' AND due_date >= CURRENT_DATE() THEN total ELSE 0 END) AS pending_amount,
-      SUM(CASE WHEN status = 'pending' AND due_date < CURRENT_DATE() THEN total ELSE 0 END) AS overdue_amount
+      SUM(CASE WHEN status = 'pending' AND (due_date IS NULL OR due_date >= CURRENT_DATE()) THEN total ELSE 0 END) AS pending_amount,
+      SUM(CASE WHEN status != 'paid' AND due_date IS NOT NULL AND due_date < CURRENT_DATE() THEN total ELSE 0 END) AS overdue_amount
     FROM invoices
     ${dateFilter}
   `;
@@ -34,10 +34,10 @@ const getReportSummary = async (startDate, endDate, isDemo = 0) => {
   const sqlStats = `
     SELECT 
       COUNT(*) AS total_created,
-      SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) AS draft_count,
-      SUM(CASE WHEN status = 'pending' AND due_date >= CURRENT_DATE() THEN 1 ELSE 0 END) AS pending_count,
+      SUM(CASE WHEN status = 'draft' AND (due_date IS NULL OR due_date >= CURRENT_DATE()) THEN 1 ELSE 0 END) AS draft_count,
+      SUM(CASE WHEN status = 'pending' AND (due_date IS NULL OR due_date >= CURRENT_DATE()) THEN 1 ELSE 0 END) AS pending_count,
       SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) AS paid_count,
-      SUM(CASE WHEN status = 'pending' AND due_date < CURRENT_DATE() THEN 1 ELSE 0 END) AS overdue_count
+      SUM(CASE WHEN status != 'paid' AND due_date IS NOT NULL AND due_date < CURRENT_DATE() THEN 1 ELSE 0 END) AS overdue_count
     FROM invoices
     ${dateFilter}
   `;

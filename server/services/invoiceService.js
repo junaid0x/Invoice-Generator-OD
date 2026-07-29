@@ -1,4 +1,5 @@
 const db = require('../database/db');
+const { getEffectiveStatus } = require('../utils/invoiceStatus');
 
 const generateInvoiceNumber = async () => {
   const today = new Date();
@@ -68,8 +69,21 @@ const getAllInvoices = async (page = 1, limit = 10, search = '', status = 'All',
   }
 
   if (status && status !== 'All') {
-    whereClauses.push(`i.status = ?`);
-    queryParams.push(status.toLowerCase());
+    const normalizedStatus = status.toLowerCase();
+    if (normalizedStatus === 'overdue') {
+      whereClauses.push(`(i.status = 'overdue' OR (i.status != 'paid' AND i.due_date IS NOT NULL AND i.due_date < CURRENT_DATE()))`);
+    } else if (normalizedStatus === 'pending') {
+      whereClauses.push(`(i.status = 'pending' AND (i.due_date IS NULL OR i.due_date >= CURRENT_DATE()))`);
+    } else if (normalizedStatus === 'draft') {
+      whereClauses.push(`(i.status = 'draft' AND (i.due_date IS NULL OR i.due_date >= CURRENT_DATE()))`);
+    } else if (normalizedStatus === 'paid') {
+      whereClauses.push(`i.status = 'paid'`);
+    } else if (normalizedStatus === 'cancelled') {
+      whereClauses.push(`(i.status = 'cancelled' AND (i.due_date IS NULL OR i.due_date >= CURRENT_DATE()))`);
+    } else {
+      whereClauses.push(`i.status = ?`);
+      queryParams.push(normalizedStatus);
+    }
   }
 
   if (whereClauses.length > 0) {
@@ -83,8 +97,13 @@ const getAllInvoices = async (page = 1, limit = 10, search = '', status = 'All',
   const [[{ total }]] = await db.query(countStr, queryParams);
   const [rows] = await db.query(queryStr, [...queryParams, Number(limit), Number(offset)]);
   
+  const processedRows = rows.map(r => ({
+    ...r,
+    status: getEffectiveStatus(r)
+  }));
+
   return {
-    data: rows,
+    data: processedRows,
     meta: {
       total,
       page: Number(page),
@@ -105,6 +124,7 @@ const getInvoiceById = async (id, isDemo = 0) => {
   
   if (invoices.length === 0) return null;
   const invoice = invoices[0];
+  invoice.status = getEffectiveStatus(invoice);
   
   const [items] = await db.query(`SELECT * FROM invoice_items WHERE invoice_id = ?`, [id]);
   invoice.items = items;

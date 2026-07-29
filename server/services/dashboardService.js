@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const subscriptionService = require('./subscriptionService');
+const { getEffectiveStatus } = require('../utils/invoiceStatus');
 
 const getDashboardData = async (isDemo = 0) => {
   try {
@@ -16,13 +17,17 @@ const getDashboardData = async (isDemo = 0) => {
     const [[{ total_invoices }]] = await db.query(`SELECT COUNT(*) as total_invoices FROM invoices WHERE is_demo = ?`, [demoFlag]);
 
     // 3. Pending Invoices
-    const [[{ pending_invoices }]] = await db.query(`SELECT COUNT(*) as pending_invoices FROM invoices WHERE status = 'pending' AND is_demo = ?`, [demoFlag]);
+    const [[{ pending_invoices }]] = await db.query(`
+      SELECT COUNT(*) as pending_invoices 
+      FROM invoices 
+      WHERE status = 'pending' AND (due_date IS NULL OR due_date >= CURRENT_DATE()) AND is_demo = ?
+    `, [demoFlag]);
 
     // 4. Overdue Invoices
     const [[{ overdue_invoices }]] = await db.query(`
       SELECT COUNT(*) as overdue_invoices 
       FROM invoices 
-      WHERE (status = 'overdue' OR (status = 'pending' AND due_date < CURRENT_DATE())) AND is_demo = ?
+      WHERE (status = 'overdue' OR (status != 'paid' AND due_date IS NOT NULL AND due_date < CURRENT_DATE())) AND is_demo = ?
     `, [demoFlag]);
 
     // 5. Total Revenue
@@ -33,11 +38,12 @@ const getDashboardData = async (isDemo = 0) => {
     `, [demoFlag]);
 
     // 6. Recent Invoices (Latest 5)
-    const [recent_invoices] = await db.query(`
+    const [recent_invoices_raw] = await db.query(`
       SELECT 
         i.id, 
         i.invoice_number, 
         i.invoice_date as date, 
+        i.due_date,
         i.total as amount, 
         i.status, 
         c.company_name as customer 
@@ -47,6 +53,11 @@ const getDashboardData = async (isDemo = 0) => {
       ORDER BY i.created_at DESC 
       LIMIT 5
     `, [demoFlag]);
+
+    const recent_invoices = recent_invoices_raw.map(inv => ({
+      ...inv,
+      status: getEffectiveStatus(inv)
+    }));
 
     // 7. Recent Customers (Latest 5)
     const [recent_customers] = await db.query(`
