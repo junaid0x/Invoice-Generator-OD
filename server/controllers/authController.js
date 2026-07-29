@@ -121,9 +121,66 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+const { initDemoUser, seedOrResetDemoData } = require('../utils/demoDataSeeder');
+
+const demoLogin = async (req, res, next) => {
+  try {
+    await initDemoUser();
+    
+    // Check if demo dataset is seeded
+    const [demoCust] = await db.query('SELECT COUNT(*) as total FROM customers WHERE is_demo = 1');
+    if (demoCust[0].total === 0) {
+      await seedOrResetDemoData();
+    }
+
+    const [users] = await db.query('SELECT * FROM users WHERE email = ?', ['admin@example.com']);
+    if (users.length === 0) {
+      const error = new Error('Demo user missing');
+      error.statusCode = 500;
+      throw error;
+    }
+
+    const user = users[0];
+    const payload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      is_demo: true
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET || 'temporary_secret_change_later', {
+      expiresIn: '1d'
+    });
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: payload
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const demoReset = async (req, res, next) => {
+  try {
+    await seedOrResetDemoData();
+    res.status(200).json({
+      success: true,
+      message: 'Demo workspace data reset successfully.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   login,
   logout,
   getMe,
-  changePassword
+  changePassword,
+  demoLogin,
+  demoReset
 };
+

@@ -8,7 +8,7 @@ const getReports = async (req, res) => {
     const start = startDate || undefined;
     const end = endDate || undefined;
     
-    const reportsData = await reportsService.getReportSummary(start, end);
+    const reportsData = await reportsService.getReportSummary(start, end, req.isDemo);
     res.json(reportsData);
   } catch (error) {
     console.error('Error fetching reports summary:', error);
@@ -18,7 +18,7 @@ const getReports = async (req, res) => {
 
 const getRevenue = async (req, res) => {
   try {
-    const revenueData = await reportsService.getRevenueBreakdown();
+    const revenueData = await reportsService.getRevenueBreakdown(req.isDemo);
     res.json(revenueData);
   } catch (error) {
     console.error('Error fetching revenue breakdown:', error);

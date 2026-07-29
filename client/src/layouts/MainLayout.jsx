@@ -2,9 +2,14 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
+import DemoWelcomeModal from '../components/DemoWelcomeModal';
+import useInactivityTimeout from '../hooks/useInactivityTimeout';
 
 export default function MainLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // Activate 15-minute inactivity timer
+  useInactivityTimeout();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -12,6 +17,7 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row font-sans text-text-primary selection:bg-primary/30 selection:text-white">
+      <DemoWelcomeModal />
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       
       <div className="flex-1 flex flex-col min-h-screen md:ml-64 transition-all duration-300">

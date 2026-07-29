@@ -2,7 +2,7 @@ const settingsService = require('../services/settingsService');
 
 const getSettings = async (req, res) => {
   try {
-    const settings = await settingsService.getSettings();
+    const settings = await settingsService.getSettings(req.isDemo);
     if (!settings) {
       return res.status(404).json({ message: 'Settings not found' });
     }
@@ -15,7 +15,7 @@ const getSettings = async (req, res) => {
 
 const updateSettings = async (req, res) => {
   try {
-    const updatedSettings = await settingsService.updateSettings(req.body);
+    const updatedSettings = await settingsService.updateSettings(req.body, req.isDemo);
     res.json({ message: 'Settings updated successfully', settings: updatedSettings });
   } catch (error) {
     console.error('Error updating settings:', error);

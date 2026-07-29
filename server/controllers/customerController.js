@@ -6,7 +6,7 @@ const getCustomers = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || '';
     
-    const result = await customerService.getAllCustomers(page, limit, search);
+    const result = await customerService.getAllCustomers(page, limit, search, req.isDemo);
     res.status(200).json({ success: true, data: result.data, meta: result.meta });
   } catch (error) {
     next(error);
@@ -15,7 +15,7 @@ const getCustomers = async (req, res, next) => {
 
 const getCustomer = async (req, res, next) => {
   try {
-    const customer = await customerService.getCustomerById(req.params.id);
+    const customer = await customerService.getCustomerById(req.params.id, req.isDemo);
     if (!customer) {
       const error = new Error('Customer not found');
       error.statusCode = 404;
@@ -41,8 +41,8 @@ const createCustomer = async (req, res, next) => {
       error.statusCode = 400;
       throw error;
     }
-    const insertId = await customerService.createCustomer(req.body);
-    const newCustomer = await customerService.getCustomerById(insertId);
+    const insertId = await customerService.createCustomer(req.body, req.isDemo);
+    const newCustomer = await customerService.getCustomerById(insertId, req.isDemo);
     res.status(201).json({ success: true, data: newCustomer });
   } catch (error) {
     next(error);
@@ -63,13 +63,13 @@ const updateCustomer = async (req, res, next) => {
       error.statusCode = 400;
       throw error;
     }
-    const updated = await customerService.updateCustomer(req.params.id, req.body);
+    const updated = await customerService.updateCustomer(req.params.id, req.body, req.isDemo);
     if (!updated) {
       const error = new Error('Customer not found');
       error.statusCode = 404;
       throw error;
     }
-    const updatedCustomer = await customerService.getCustomerById(req.params.id);
+    const updatedCustomer = await customerService.getCustomerById(req.params.id, req.isDemo);
     res.status(200).json({ success: true, data: updatedCustomer });
   } catch (error) {
     next(error);
@@ -78,7 +78,7 @@ const updateCustomer = async (req, res, next) => {
 
 const deleteCustomer = async (req, res, next) => {
   try {
-    const deleted = await customerService.deleteCustomer(req.params.id);
+    const deleted = await customerService.deleteCustomer(req.params.id, req.isDemo);
     if (!deleted) {
       const error = new Error('Customer not found');
       error.statusCode = 404;

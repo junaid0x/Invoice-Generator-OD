@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -12,11 +13,12 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const reportsRoutes = require('./routes/reportsRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const { initDemoUser } = require('./utils/demoDataSeeder');
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Security Middleware
 app.use(helmet());
@@ -46,13 +48,30 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 
+// Serve client dist static files and SPA wildcard fallback
+const clientDistPath = path.join(__dirname, '../client/dist');
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+}
+
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+    const indexPath = path.join(clientDistPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+  }
+  next();
+});
+
+// Error Handler Middleware (Must be last)
 app.use(errorHandler);
 
 const initAdmin = async () => {
   try {
     const bcrypt = require('bcrypt');
     const db = require('./database/db');
-    const [users] = await db.query('SELECT id FROM users LIMIT 1');
+    const [users] = await db.query('SELECT id FROM users WHERE email = ?', ['info@oceandevelopersltd.com']);
     if (users.length === 0) {
       const hashedPassword = await bcrypt.hash('Ocean123', 10);
       await db.query(
@@ -61,6 +80,8 @@ const initAdmin = async () => {
       );
       console.log('Seeded default admin user: info@oceandevelopersltd.com');
     }
+
+    await initDemoUser();
   } catch (error) {
     console.error('Failed to seed admin user:', error);
   }
@@ -71,3 +92,4 @@ initAdmin().then(() => {
     console.log(`Server running on port ${PORT}`);
   });
 });
+

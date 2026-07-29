@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FileText, Trash2, Copy, Eye } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import SectionContainer from '../components/ui/SectionContainer';
@@ -17,13 +17,23 @@ import { formatCurrency } from '../utils/calculations';
 
 export default function Invoices() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const statusOptions = ['All', 'Draft', 'Pending', 'Paid', 'Overdue', 'Cancelled'];
+
+  const getNormalizedStatus = (param) => {
+    if (!param) return 'All';
+    const match = statusOptions.find(opt => opt.toLowerCase() === param.toLowerCase());
+    return match || 'All';
+  };
+
   const [invoices, setInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState(() => getNormalizedStatus(searchParams.get('status')));
   
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -31,6 +41,13 @@ export default function Invoices() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const urlStatus = searchParams.get('status');
+    if (urlStatus) {
+      setStatusFilter(getNormalizedStatus(urlStatus));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -106,8 +123,6 @@ export default function Invoices() {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
-
-  const statusOptions = ['All', 'Draft', 'Pending', 'Paid', 'Overdue', 'Cancelled'];
 
   return (
     <div className="space-y-6">

@@ -53,13 +53,15 @@ const getDaysRemaining = (sub) => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
-const getAllSubscriptions = async () => {
+const getAllSubscriptions = async (isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
   const [rows] = await db.query(`
     SELECT s.*, c.company_name as customer_name, c.email as customer_email 
     FROM subscriptions s 
     LEFT JOIN customers c ON s.customer_id = c.id 
+    WHERE s.is_demo = ?
     ORDER BY s.created_at DESC
-  `);
+  `, [demoFlag]);
   
   // Compute statuses dynamically
   const enhanced = rows.map(r => ({
@@ -71,13 +73,14 @@ const getAllSubscriptions = async () => {
   return enhanced;
 };
 
-const getSubscriptionById = async (id) => {
+const getSubscriptionById = async (id, isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
   const [rows] = await db.query(`
     SELECT s.*, c.company_name as customer_name 
     FROM subscriptions s 
     LEFT JOIN customers c ON s.customer_id = c.id 
-    WHERE s.id = ?
-  `, [id]);
+    WHERE s.id = ? AND s.is_demo = ?
+  `, [id, demoFlag]);
 
   if (rows.length === 0) return null;
   const sub = rows[0];
@@ -90,18 +93,20 @@ const getSubscriptionById = async (id) => {
   return sub;
 };
 
-const createSubscription = async (data) => {
+const createSubscription = async (data, isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
   const { customer_id, service_type, service_name, service_identifier, provider, price, purchase_date, renewal_date, notes } = data;
   
   const [result] = await db.query(
-    `INSERT INTO subscriptions (customer_id, service_type, service_name, service_identifier, provider, price, purchase_date, renewal_date, notes) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [customer_id, service_type, service_name, service_identifier, provider, price || 0, purchase_date, renewal_date || null, notes || '']
+    `INSERT INTO subscriptions (customer_id, service_type, service_name, service_identifier, provider, price, purchase_date, renewal_date, notes, is_demo) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [customer_id, service_type, service_name, service_identifier, provider, price || 0, purchase_date, renewal_date || null, notes || '', demoFlag]
   );
   return result.insertId;
 };
 
-const updateSubscription = async (id, data) => {
+const updateSubscription = async (id, data, isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
   const { customer_id, service_type, service_name, service_identifier, provider, price, purchase_date, renewal_date, contract_start, contract_end, notes } = data;
   
   const fields = [];
@@ -121,17 +126,19 @@ const updateSubscription = async (id, data) => {
 
   if (fields.length === 0) return true;
 
-  values.push(id);
-  const [result] = await db.query(`UPDATE subscriptions SET ${fields.join(', ')} WHERE id = ?`, values);
+  values.push(id, demoFlag);
+  const [result] = await db.query(`UPDATE subscriptions SET ${fields.join(', ')} WHERE id = ? AND is_demo = ?`, values);
   return result.affectedRows > 0;
 };
 
-const deleteSubscription = async (id) => {
-  const [result] = await db.query('DELETE FROM subscriptions WHERE id = ?', [id]);
+const deleteSubscription = async (id, isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
+  const [result] = await db.query('DELETE FROM subscriptions WHERE id = ? AND is_demo = ?', [id, demoFlag]);
   return result.affectedRows > 0;
 };
 
-const renewSubscription = async (id, data) => {
+const renewSubscription = async (id, data, isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
   const { renewal_date, price, notes } = data;
   
   const connection = await db.getConnection();
@@ -146,8 +153,8 @@ const renewSubscription = async (id, data) => {
 
     // Update main subscription
     await connection.query(
-      `UPDATE subscriptions SET renewal_date = ?, price = ? WHERE id = ?`,
-      [renewal_date, price || 0, id]
+      `UPDATE subscriptions SET renewal_date = ?, price = ? WHERE id = ? AND is_demo = ?`,
+      [renewal_date, price || 0, id, demoFlag]
     );
 
     await connection.commit();
@@ -160,7 +167,8 @@ const renewSubscription = async (id, data) => {
   }
 };
 
-const activateMaintenanceContract = async (id, data) => {
+const activateMaintenanceContract = async (id, data, isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
   const { contract_start, contract_end, price, notes } = data;
   
   const connection = await db.getConnection();
@@ -173,8 +181,8 @@ const activateMaintenanceContract = async (id, data) => {
     );
 
     await connection.query(
-      `UPDATE subscriptions SET contract_start = ?, contract_end = ?, price = ? WHERE id = ?`,
-      [contract_start, contract_end, price || 0, id]
+      `UPDATE subscriptions SET contract_start = ?, contract_end = ?, price = ? WHERE id = ? AND is_demo = ?`,
+      [contract_start, contract_end, price || 0, id, demoFlag]
     );
 
     await connection.commit();

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/ui/PageHeader';
 import SectionContainer from '../components/ui/SectionContainer';
 import Card, { CardContent } from '../components/ui/Card';
@@ -14,13 +15,38 @@ import RenewSubscriptionModal from '../components/subscriptions/RenewSubscriptio
 import MaintenanceContractModal from '../components/subscriptions/MaintenanceContractModal';
 
 export default function Subscriptions() {
+  const [searchParams] = useSearchParams();
+
+  const getNormalizedService = (param) => {
+    if (!param) return 'All';
+    const match = ['All', 'Hosting', 'Business Email', 'Website Maintenance'].find(
+      opt => opt.toLowerCase() === param.toLowerCase()
+    );
+    return match || 'All';
+  };
+
+  const getNormalizedStatus = (param) => {
+    if (!param) return 'All';
+    const match = ['All', 'Active', 'Expiring Soon', 'Expired', 'Free Maintenance', 'Active Contract', 'No Active Contract'].find(
+      opt => opt.toLowerCase() === param.toLowerCase()
+    );
+    return match || 'All';
+  };
+
   const [subscriptions, setSubscriptions] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [serviceFilter, setServiceFilter] = useState('All');
-  
+  const [statusFilter, setStatusFilter] = useState(() => getNormalizedStatus(searchParams.get('status')));
+  const [serviceFilter, setServiceFilter] = useState(() => getNormalizedService(searchParams.get('service')));
+
+  useEffect(() => {
+    const serviceParam = searchParams.get('service');
+    const statusParam = searchParams.get('status');
+    if (serviceParam) setServiceFilter(getNormalizedService(serviceParam));
+    if (statusParam) setStatusFilter(getNormalizedStatus(statusParam));
+  }, [searchParams]);
+
   // Modals state
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
   const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);

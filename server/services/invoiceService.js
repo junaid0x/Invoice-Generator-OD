@@ -42,8 +42,10 @@ const generateInvoiceNumber = async () => {
   return finalInvoiceNumber;
 };
 
-const getAllInvoices = async (page = 1, limit = 10, search = '', status = 'All') => {
+const getAllInvoices = async (page = 1, limit = 10, search = '', status = 'All', isDemo = 0) => {
   const offset = (page - 1) * limit;
+  const demoFlag = isDemo ? 1 : 0;
+  
   let queryStr = `
     SELECT i.*, c.company_name as customer_name 
     FROM invoices i 
@@ -56,7 +58,8 @@ const getAllInvoices = async (page = 1, limit = 10, search = '', status = 'All')
   `;
   
   const queryParams = [];
-  const whereClauses = [];
+  const whereClauses = [`i.is_demo = ?`];
+  queryParams.push(demoFlag);
 
   if (search) {
     whereClauses.push(`(i.invoice_number LIKE ? OR c.company_name LIKE ?)`);
@@ -91,13 +94,14 @@ const getAllInvoices = async (page = 1, limit = 10, search = '', status = 'All')
   };
 };
 
-const getInvoiceById = async (id) => {
+const getInvoiceById = async (id, isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
   const [invoices] = await db.query(`
     SELECT i.*, c.company_name as customer_name, c.email as customer_email, c.address as customer_address 
     FROM invoices i 
     LEFT JOIN customers c ON i.customer_id = c.id 
-    WHERE i.id = ?
-  `, [id]);
+    WHERE i.id = ? AND i.is_demo = ?
+  `, [id, demoFlag]);
   
   if (invoices.length === 0) return null;
   const invoice = invoices[0];
@@ -108,7 +112,8 @@ const getInvoiceById = async (id) => {
   return invoice;
 };
 
-const createInvoice = async (data) => {
+const createInvoice = async (data, isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
   const { customer_id, invoice_date, due_date, currency, subtotal, tax, discount, shipping, advance_amount, total, status, notes, terms, items } = data;
   
   const invoice_number = await generateInvoiceNumber();
@@ -117,14 +122,14 @@ const createInvoice = async (data) => {
   try {
     await connection.beginTransaction();
     
-    const [settings] = await connection.query('SELECT currency FROM settings WHERE id = 1');
+    const [settings] = await connection.query('SELECT currency FROM settings WHERE is_demo = ? LIMIT 1', [demoFlag]);
     const defaultCurrency = settings[0]?.currency || 'CAD';
 
     const [result] = await connection.query(
       `INSERT INTO invoices 
-      (invoice_number, customer_id, invoice_date, due_date, currency, subtotal, tax, discount, shipping, advance_amount, total, status, notes, terms) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [invoice_number, customer_id, invoice_date, due_date, currency || defaultCurrency, subtotal || 0, tax || 0, discount || 0, shipping || 0, advance_amount || 0, total || 0, status || 'draft', notes || '', terms || '']
+      (invoice_number, customer_id, invoice_date, due_date, currency, subtotal, tax, discount, shipping, advance_amount, total, status, notes, terms, is_demo) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [invoice_number, customer_id, invoice_date, due_date, currency || defaultCurrency, subtotal || 0, tax || 0, discount || 0, shipping || 0, advance_amount || 0, total || 0, status || 'draft', notes || '', terms || '', demoFlag]
     );
     
     const invoiceId = result.insertId;
@@ -148,7 +153,8 @@ const createInvoice = async (data) => {
   }
 };
 
-const updateInvoice = async (id, data) => {
+const updateInvoice = async (id, data, isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
   const { customer_id, invoice_date, due_date, currency, subtotal, tax, discount, shipping, advance_amount, total, status, notes, terms, items } = data;
   
   const connection = await db.getConnection();
@@ -173,9 +179,9 @@ const updateInvoice = async (id, data) => {
     if (terms !== undefined) { fields.push('terms = ?'); values.push(terms); }
     
     if (fields.length > 0) {
-      values.push(id);
+      values.push(id, demoFlag);
       await connection.query(
-        `UPDATE invoices SET ${fields.join(', ')} WHERE id = ?`,
+        `UPDATE invoices SET ${fields.join(', ')} WHERE id = ? AND is_demo = ?`,
         values
       );
     }
@@ -202,8 +208,8 @@ const updateInvoice = async (id, data) => {
   }
 };
 
-const duplicateInvoice = async (id) => {
-  const original = await getInvoiceById(id);
+const duplicateInvoice = async (id, isDemo = 0) => {
+  const original = await getInvoiceById(id, isDemo);
   if (!original) throw new Error('Invoice not found');
   
   const invoiceData = {
@@ -212,12 +218,13 @@ const duplicateInvoice = async (id) => {
     status: 'draft',
   };
   
-  const newId = await createInvoice(invoiceData);
+  const newId = await createInvoice(invoiceData, isDemo);
   return newId;
 };
 
-const deleteInvoice = async (id) => {
-  const [result] = await db.query('DELETE FROM invoices WHERE id = ?', [id]);
+const deleteInvoice = async (id, isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
+  const [result] = await db.query('DELETE FROM invoices WHERE id = ? AND is_demo = ?', [id, demoFlag]);
   return result.affectedRows > 0;
 };
 
@@ -229,3 +236,4 @@ module.exports = {
   duplicateInvoice,
   deleteInvoice
 };
+

@@ -7,7 +7,7 @@ const getInvoices = async (req, res, next) => {
     const search = req.query.search || '';
     const status = req.query.status || 'All';
     
-    const result = await invoiceService.getAllInvoices(page, limit, search, status);
+    const result = await invoiceService.getAllInvoices(page, limit, search, status, req.isDemo);
     res.status(200).json({ success: true, data: result.data, meta: result.meta });
   } catch (error) {
     next(error);
@@ -16,7 +16,7 @@ const getInvoices = async (req, res, next) => {
 
 const getInvoice = async (req, res, next) => {
   try {
-    const invoice = await invoiceService.getInvoiceById(req.params.id);
+    const invoice = await invoiceService.getInvoiceById(req.params.id, req.isDemo);
     if (!invoice) {
       const error = new Error('Invoice not found');
       error.statusCode = 404;
@@ -50,8 +50,8 @@ const createInvoice = async (req, res, next) => {
       throw error;
     }
 
-    const insertId = await invoiceService.createInvoice(req.body);
-    const newInvoice = await invoiceService.getInvoiceById(insertId);
+    const insertId = await invoiceService.createInvoice(req.body, req.isDemo);
+    const newInvoice = await invoiceService.getInvoiceById(insertId, req.isDemo);
     res.status(201).json({ success: true, data: newInvoice });
   } catch (error) {
     next(error);
@@ -85,13 +85,13 @@ const updateInvoice = async (req, res, next) => {
       throw error;
     }
 
-    const updated = await invoiceService.updateInvoice(req.params.id, req.body);
+    const updated = await invoiceService.updateInvoice(req.params.id, req.body, req.isDemo);
     if (!updated) {
       const error = new Error('Invoice not found or no changes made');
       error.statusCode = 404;
       throw error;
     }
-    const updatedInvoice = await invoiceService.getInvoiceById(req.params.id);
+    const updatedInvoice = await invoiceService.getInvoiceById(req.params.id, req.isDemo);
     res.status(200).json({ success: true, data: updatedInvoice });
   } catch (error) {
     next(error);
@@ -100,7 +100,7 @@ const updateInvoice = async (req, res, next) => {
 
 const deleteInvoice = async (req, res, next) => {
   try {
-    const deleted = await invoiceService.deleteInvoice(req.params.id);
+    const deleted = await invoiceService.deleteInvoice(req.params.id, req.isDemo);
     if (!deleted) {
       const error = new Error('Invoice not found');
       error.statusCode = 404;
@@ -114,8 +114,8 @@ const deleteInvoice = async (req, res, next) => {
 
 const duplicateInvoice = async (req, res, next) => {
   try {
-    const newId = await invoiceService.duplicateInvoice(req.params.id);
-    const newInvoice = await invoiceService.getInvoiceById(newId);
+    const newId = await invoiceService.duplicateInvoice(req.params.id, req.isDemo);
+    const newInvoice = await invoiceService.getInvoiceById(newId, req.isDemo);
     res.status(201).json({ success: true, data: newInvoice });
   } catch (error) {
     if (error.message === 'Invoice not found') {

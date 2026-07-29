@@ -27,6 +27,17 @@ export default function Navbar({ toggleSidebar }) {
     navigate('/login');
   };
 
+  const isDemo = user?.is_demo || user?.email === 'admin@example.com';
+
+  const handleResetDemo = async () => {
+    try {
+      await api.post('/auth/demo-reset');
+      window.location.reload();
+    } catch (err) {
+      alert('Failed to reset demo data');
+    }
+  };
+
   return (
     <header className="h-20 bg-background/80 backdrop-blur-md border-b border-border flex items-center justify-between px-6 sm:px-10 z-10 sticky top-0">
       <div className="flex items-center">
@@ -36,10 +47,15 @@ export default function Navbar({ toggleSidebar }) {
         >
           <Menu size={20} />
         </button>
-        <div className="hidden sm:flex items-center">
+        <div className="hidden sm:flex items-center gap-3">
           <h1 className="text-base font-medium text-text-secondary tracking-wide">
             Invoice Suite
           </h1>
+          {isDemo && (
+            <span className="bg-primary/20 text-primary text-xs font-semibold px-2.5 py-0.5 rounded-full border border-primary/30 flex items-center gap-1">
+              ✨ Demo Workspace
+            </span>
+          )}
         </div>
       </div>
       
@@ -61,6 +77,9 @@ export default function Navbar({ toggleSidebar }) {
                 <span className="text-sm font-medium text-white group-hover:text-primary transition-colors">
                   {user?.name || 'Administrator'}
                 </span>
+                {isDemo && (
+                  <span className="text-[10px] text-primary font-medium">Demo Mode</span>
+                )}
               </div>
               <div className="w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center text-text-secondary group-hover:border-primary/30 transition-colors">
                 <User size={16} />
@@ -69,7 +88,16 @@ export default function Navbar({ toggleSidebar }) {
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-[var(--radius-input)] shadow-lg py-1 z-50 overflow-hidden">
+              <div className="absolute right-0 mt-2 w-52 bg-card border border-border rounded-[var(--radius-input)] shadow-lg py-1 z-50 overflow-hidden divide-y divide-border">
+                {isDemo && (
+                  <button 
+                    onClick={handleResetDemo}
+                    className="w-full text-left px-4 py-2.5 text-sm text-text-secondary hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    <span>Reset Demo Data</span>
+                  </button>
+                )}
                 <button 
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2.5 text-sm text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors flex items-center gap-2"

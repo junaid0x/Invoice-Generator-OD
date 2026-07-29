@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { Calendar, DollarSign, FileText, AlertCircle, CheckCircle, Clock, PieChart, Repeat, Server, Mail, Globe, Clock4 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
@@ -200,24 +201,26 @@ export default function Reports() {
       {subscriptionStats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
           {[
-            { label: 'Total Subscriptions', value: subscriptionStats.total, icon: Repeat, color: 'text-primary' },
-            { label: 'Hosting', value: subscriptionStats.hosting, icon: Server, color: 'text-white' },
-            { label: 'Business Email', value: subscriptionStats.email, icon: Mail, color: 'text-white' },
-            { label: 'Website Maintenance', value: subscriptionStats.maintenance, icon: Globe, color: 'text-white' },
-            { label: 'Expiring Soon', value: subscriptionStats.expiring_soon, icon: Clock4, color: 'text-warning' },
-            { label: 'Expired', value: subscriptionStats.expired, icon: AlertCircle, color: 'text-danger' }
+            { label: 'Total Subscriptions', value: subscriptionStats.total, icon: Repeat, color: 'text-primary', link: '/subscriptions' },
+            { label: 'Hosting', value: subscriptionStats.hosting, icon: Server, color: 'text-white', link: '/subscriptions?service=Hosting' },
+            { label: 'Business Email', value: subscriptionStats.email, icon: Mail, color: 'text-white', link: '/subscriptions?service=Business Email' },
+            { label: 'Website Maintenance', value: subscriptionStats.maintenance, icon: Globe, color: 'text-white', link: '/subscriptions?service=Website Maintenance' },
+            { label: 'Expiring Soon', value: subscriptionStats.expiring_soon, icon: Clock4, color: 'text-warning', link: '/subscriptions?status=Expiring Soon' },
+            { label: 'Expired', value: subscriptionStats.expired, icon: AlertCircle, color: 'text-danger', link: '/subscriptions?status=Expired' }
           ].map((card, idx) => (
-            <Card key={idx} className="bg-card">
-              <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-text-secondary">{card.label}</span>
-                  <card.icon size={18} className={card.color} />
-                </div>
-                <h3 className={`text-2xl font-bold tracking-tight ${card.color === 'text-white' ? 'text-white' : card.color}`}>
-                  {card.value || 0}
-                </h3>
-              </CardContent>
-            </Card>
+            <Link key={idx} to={card.link}>
+              <Card className="bg-card hover:border-primary/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 cursor-pointer h-full group">
+                <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
+                  <div className="flex justify-between items-start">
+                    <span className="text-sm font-medium text-text-secondary group-hover:text-white transition-colors">{card.label}</span>
+                    <card.icon size={18} className={`${card.color} group-hover:scale-110 transition-transform`} />
+                  </div>
+                  <h3 className={`text-2xl font-bold tracking-tight ${card.color === 'text-white' ? 'text-white' : card.color}`}>
+                    {card.value || 0}
+                  </h3>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}
@@ -309,16 +312,16 @@ export default function Reports() {
           <CardContent className="p-0">
             <div className="divide-y divide-border">
               {[
-                { label: 'Invoices Created', value: statistics?.total_created, color: 'text-white' },
-                { label: 'Paid Invoices', value: statistics?.paid_count, color: 'text-success' },
-                { label: 'Pending Invoices', value: statistics?.pending_count, color: 'text-primary' },
-                { label: 'Overdue Invoices', value: statistics?.overdue_count, color: 'text-danger' },
-                { label: 'Draft Invoices', value: statistics?.draft_count, color: 'text-text-secondary' },
+                { label: 'Invoices Created', value: statistics?.total_created, color: 'text-white', link: '/invoices' },
+                { label: 'Paid Invoices', value: statistics?.paid_count, color: 'text-success', link: '/invoices?status=Paid' },
+                { label: 'Pending Invoices', value: statistics?.pending_count, color: 'text-primary', link: '/invoices?status=Pending' },
+                { label: 'Overdue Invoices', value: statistics?.overdue_count, color: 'text-danger', link: '/invoices?status=Overdue' },
+                { label: 'Draft Invoices', value: statistics?.draft_count, color: 'text-text-secondary', link: '/invoices?status=Draft' },
               ].map((stat, idx) => (
-                <div key={idx} className="flex justify-between items-center p-5 hover:bg-white/5 transition-colors">
-                  <span className="text-sm font-medium text-text-secondary">{stat.label}</span>
-                  <span className={`text-lg font-bold ${stat.color}`}>{stat.value || 0}</span>
-                </div>
+                <Link key={idx} to={stat.link} className="flex justify-between items-center p-5 hover:bg-white/5 transition-colors cursor-pointer group">
+                  <span className="text-sm font-medium text-text-secondary group-hover:text-white transition-colors">{stat.label}</span>
+                  <span className={`text-lg font-bold ${stat.color} group-hover:scale-105 transition-transform`}>{stat.value || 0}</span>
+                </Link>
               ))}
             </div>
           </CardContent>

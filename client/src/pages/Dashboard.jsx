@@ -86,50 +86,69 @@ export default function Dashboard() {
       <SectionContainer>
         {/* TOP STAT CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <Card className="hover:border-primary/50 transition-colors">
-            <CardContent className="py-6 flex items-center gap-4 min-w-0">
-              <div className="p-3 bg-primary/10 text-primary rounded-full shrink-0">
-                <Users size={24} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-text-secondary mb-1 truncate">Total Customers</p>
-                <h3 className="text-2xl font-bold text-white truncate">{topStats.total_customers}</h3>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="hover:border-primary/50 transition-colors">
-            <CardContent className="py-6 flex items-center gap-4 min-w-0">
-              <div className="p-3 bg-primary/10 text-primary rounded-full shrink-0">
-                <FileText size={24} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-text-secondary mb-1 truncate">Total Invoices</p>
-                <h3 className="text-2xl font-bold text-white truncate">{topStats.total_invoices}</h3>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="hover:border-primary/50 transition-colors">
-            <CardContent className="py-6 flex items-center gap-4 min-w-0">
-              <div className="p-3 bg-secondary text-text-primary rounded-full border border-border shrink-0">
-                <Clock size={24} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-text-secondary mb-1 truncate">Pending Invoices</p>
-                <h3 className="text-2xl font-bold text-white truncate">{topStats.pending_invoices}</h3>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="hover:border-danger/50 transition-colors">
-            <CardContent className="py-6 flex items-center gap-4 min-w-0">
-              <div className="p-3 bg-danger/10 text-danger rounded-full shrink-0">
-                <AlertCircle size={24} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-text-secondary mb-1 truncate">Overdue Invoices</p>
-                <h3 className="text-2xl font-bold text-white truncate">{topStats.overdue_invoices}</h3>
-              </div>
-            </CardContent>
-          </Card>
+          <Link to="/customers">
+            <Card className="cursor-pointer hover:border-primary/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 group">
+              <CardContent className="py-6 flex items-center justify-between gap-4 min-w-0">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="p-3 bg-primary/10 text-primary rounded-full shrink-0 group-hover:scale-110 transition-transform">
+                    <Users size={24} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-text-secondary mb-1 truncate">Total Customers</p>
+                    <h3 className="text-2xl font-bold text-white truncate">{topStats.total_customers}</h3>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link to="/invoices">
+            <Card className="cursor-pointer hover:border-primary/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 group">
+              <CardContent className="py-6 flex items-center justify-between gap-4 min-w-0">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="p-3 bg-primary/10 text-primary rounded-full shrink-0 group-hover:scale-110 transition-transform">
+                    <FileText size={24} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-text-secondary mb-1 truncate">Total Invoices</p>
+                    <h3 className="text-2xl font-bold text-white truncate">{topStats.total_invoices}</h3>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/invoices?status=Pending">
+            <Card className="cursor-pointer hover:border-primary/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 group">
+              <CardContent className="py-6 flex items-center justify-between gap-4 min-w-0">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="p-3 bg-secondary text-text-primary rounded-full border border-border shrink-0 group-hover:scale-110 transition-transform">
+                    <Clock size={24} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-text-secondary mb-1 truncate">Pending Invoices</p>
+                    <h3 className="text-2xl font-bold text-white truncate">{topStats.pending_invoices}</h3>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/invoices?status=Overdue">
+            <Card className="cursor-pointer hover:border-danger/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 group">
+              <CardContent className="py-6 flex items-center justify-between gap-4 min-w-0">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="p-3 bg-danger/10 text-danger rounded-full shrink-0 group-hover:scale-110 transition-transform">
+                    <AlertCircle size={24} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-text-secondary mb-1 truncate">Overdue Invoices</p>
+                    <h3 className="text-2xl font-bold text-white truncate">{topStats.overdue_invoices}</h3>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* REVENUE BANNER (Full Width) */}

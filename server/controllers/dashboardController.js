@@ -2,7 +2,7 @@ const dashboardService = require('../services/dashboardService');
 
 const getDashboardData = async (req, res) => {
   try {
-    const data = await dashboardService.getDashboardData();
+    const data = await dashboardService.getDashboardData(req.isDemo);
     res.json(data);
   } catch (error) {
     console.error('Error in getDashboardData controller:', error);

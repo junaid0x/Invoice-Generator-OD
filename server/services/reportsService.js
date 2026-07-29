@@ -1,14 +1,17 @@
 const db = require('../database/db');
 const subscriptionService = require('./subscriptionService');
 
-const getReportSummary = async (startDate, endDate) => {
-  let dateFilter = '';
-  const queryParams = [];
+const getReportSummary = async (startDate, endDate, isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
+  const whereConditions = ['is_demo = ?'];
+  const queryParams = [demoFlag];
 
   if (startDate && endDate) {
-    dateFilter = 'WHERE invoice_date BETWEEN ? AND ?';
+    whereConditions.push('invoice_date BETWEEN ? AND ?');
     queryParams.push(startDate, endDate);
   }
+
+  const dateFilter = 'WHERE ' + whereConditions.join(' AND ');
 
   // 1. Summary Cards
   const sqlSummary = `
@@ -41,9 +44,11 @@ const getReportSummary = async (startDate, endDate) => {
   const [[statsRows]] = await db.query(sqlStats, queryParams);
 
   // 3. Top Customers
-  let customerDateFilter = '';
+  const custConditions = ['i.is_demo = ?'];
+  const custQueryParams = [demoFlag];
   if (startDate && endDate) {
-    customerDateFilter = 'WHERE i.invoice_date BETWEEN ? AND ?';
+    custConditions.push('i.invoice_date BETWEEN ? AND ?');
+    custQueryParams.push(startDate, endDate);
   }
   
   const sqlCustomers = `
@@ -53,19 +58,19 @@ const getReportSummary = async (startDate, endDate) => {
       SUM(CASE WHEN i.status = 'paid' THEN i.total ELSE 0 END) AS revenue_generated
     FROM customers c
     JOIN invoices i ON c.id = i.customer_id
-    ${customerDateFilter}
+    WHERE ${custConditions.join(' AND ')}
     GROUP BY c.id
     ORDER BY revenue_generated DESC
     LIMIT 5
   `;
-  const [topCustomers] = await db.query(sqlCustomers, queryParams);
+  const [topCustomers] = await db.query(sqlCustomers, custQueryParams);
 
   // 4. Currency
-  const [[settings]] = await db.query(`SELECT currency FROM settings WHERE id = 1`);
+  const [[settings]] = await db.query(`SELECT currency FROM settings WHERE is_demo = ? LIMIT 1`, [demoFlag]);
   const currency = settings?.currency || 'CAD';
 
   // 5. Subscription Stats
-  const allSubs = await subscriptionService.getAllSubscriptions();
+  const allSubs = await subscriptionService.getAllSubscriptions(isDemo);
   const subscriptionStats = {
     total: allSubs.length,
     hosting: allSubs.filter(s => s.service_type === 'Hosting').length,
@@ -99,8 +104,8 @@ const getReportSummary = async (startDate, endDate) => {
   };
 };
 
-const getRevenueBreakdown = async () => {
-  // Current year only
+const getRevenueBreakdown = async (isDemo = 0) => {
+  const demoFlag = isDemo ? 1 : 0;
   const currentYear = new Date().getFullYear();
   
   const sql = `
@@ -108,11 +113,11 @@ const getRevenueBreakdown = async () => {
       MONTH(invoice_date) AS month,
       SUM(total) AS revenue
     FROM invoices
-    WHERE status = 'paid' AND YEAR(invoice_date) = ?
+    WHERE status = 'paid' AND YEAR(invoice_date) = ? AND is_demo = ?
     GROUP BY MONTH(invoice_date)
     ORDER BY month ASC
   `;
-  const [rows] = await db.query(sql, [currentYear]);
+  const [rows] = await db.query(sql, [currentYear, demoFlag]);
   
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const revenueData = monthNames.map((name, index) => {
@@ -130,3 +135,4 @@ module.exports = {
   getReportSummary,
   getRevenueBreakdown
 };
+

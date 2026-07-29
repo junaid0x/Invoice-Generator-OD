@@ -2,7 +2,7 @@ const subscriptionService = require('../services/subscriptionService');
 
 const getAllSubscriptions = async (req, res, next) => {
   try {
-    const subscriptions = await subscriptionService.getAllSubscriptions();
+    const subscriptions = await subscriptionService.getAllSubscriptions(req.isDemo);
     res.json(subscriptions);
   } catch (error) {
     next(error);
@@ -11,7 +11,7 @@ const getAllSubscriptions = async (req, res, next) => {
 
 const getSubscriptionById = async (req, res, next) => {
   try {
-    const subscription = await subscriptionService.getSubscriptionById(req.params.id);
+    const subscription = await subscriptionService.getSubscriptionById(req.params.id, req.isDemo);
     if (!subscription) {
       return res.status(404).json({ message: 'Subscription not found' });
     }
@@ -33,7 +33,7 @@ const createSubscription = async (req, res, next) => {
       return res.status(400).json({ message: 'Price cannot be negative' });
     }
 
-    const id = await subscriptionService.createSubscription(req.body);
+    const id = await subscriptionService.createSubscription(req.body, req.isDemo);
     res.status(201).json({ id, message: 'Subscription created successfully' });
   } catch (error) {
     next(error);
@@ -46,7 +46,7 @@ const updateSubscription = async (req, res, next) => {
       return res.status(400).json({ message: 'Price cannot be negative' });
     }
 
-    const updated = await subscriptionService.updateSubscription(req.params.id, req.body);
+    const updated = await subscriptionService.updateSubscription(req.params.id, req.body, req.isDemo);
     if (!updated) {
       return res.status(404).json({ message: 'Subscription not found' });
     }
@@ -58,7 +58,7 @@ const updateSubscription = async (req, res, next) => {
 
 const deleteSubscription = async (req, res, next) => {
   try {
-    const deleted = await subscriptionService.deleteSubscription(req.params.id);
+    const deleted = await subscriptionService.deleteSubscription(req.params.id, req.isDemo);
     if (!deleted) {
       return res.status(404).json({ message: 'Subscription not found' });
     }
@@ -78,7 +78,7 @@ const renewSubscription = async (req, res, next) => {
       return res.status(400).json({ message: 'Renewal Price cannot be negative' });
     }
 
-    await subscriptionService.renewSubscription(req.params.id, req.body);
+    await subscriptionService.renewSubscription(req.params.id, req.body, req.isDemo);
     res.json({ message: 'Subscription renewed successfully' });
   } catch (error) {
     next(error);
@@ -98,7 +98,7 @@ const activateMaintenanceContract = async (req, res, next) => {
       return res.status(400).json({ message: 'Contract Price cannot be negative' });
     }
 
-    await subscriptionService.activateMaintenanceContract(req.params.id, req.body);
+    await subscriptionService.activateMaintenanceContract(req.params.id, req.body, req.isDemo);
     res.json({ message: 'Maintenance Contract activated successfully' });
   } catch (error) {
     next(error);

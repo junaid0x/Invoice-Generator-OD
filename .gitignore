@@ -115,3 +115,5 @@ dist
 server/uploads/
 client/dist/
 docs
+*.sql
+*.zip

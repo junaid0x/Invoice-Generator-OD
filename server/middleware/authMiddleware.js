@@ -18,9 +18,8 @@ const protect = (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'temporary_secret_change_later');
       
-      // In a real application, we would fetch the user from the database here.
-      // Since we only have a temporary admin, we'll just attach the decoded payload.
       req.user = decoded;
+      req.isDemo = Boolean(decoded.is_demo || decoded.email === 'admin@example.com');
       
       next();
     } catch (err) {
