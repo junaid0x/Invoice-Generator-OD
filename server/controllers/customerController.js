@@ -2,8 +2,10 @@ const customerService = require('../services/customerService');
 
 const getCustomers = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const limit = req.query.limit !== undefined 
+      ? (req.query.limit === 'all' || req.query.limit === '0' ? null : parseInt(req.query.limit)) 
+      : null;
     const search = req.query.search || '';
     
     const result = await customerService.getAllCustomers(page, limit, search, req.isDemo);

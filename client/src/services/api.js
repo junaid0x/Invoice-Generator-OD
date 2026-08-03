@@ -12,6 +12,20 @@ export const api = {
   async request(endpoint, options = {}) {
     const token = localStorage.getItem('token');
 
+    let url = `${API_URL}${endpoint}`;
+    if (options.params && typeof options.params === 'object') {
+      const searchParams = new URLSearchParams();
+      Object.entries(options.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, value);
+        }
+      });
+      const queryString = searchParams.toString();
+      if (queryString) {
+        url += (url.includes('?') ? '&' : '?') + queryString;
+      }
+    }
+
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -21,7 +35,7 @@ export const api = {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await fetch(url, {
       ...options,
       headers,
     });

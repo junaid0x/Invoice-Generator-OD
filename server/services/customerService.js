@@ -1,7 +1,6 @@
 const db = require('../database/db');
 
-const getAllCustomers = async (page = 1, limit = 10, search = '', isDemo = 0) => {
-  const offset = (page - 1) * limit;
+const getAllCustomers = async (page = 1, limit = null, search = '', isDemo = 0) => {
   const demoFlag = isDemo ? 1 : 0;
   
   let queryStr = 'SELECT * FROM customers WHERE is_demo = ?';
@@ -16,18 +15,27 @@ const getAllCustomers = async (page = 1, limit = 10, search = '', isDemo = 0) =>
     queryParams.push(searchParam, searchParam, searchParam);
   }
   
-  queryStr += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+  queryStr += ' ORDER BY created_at DESC';
   
-  const [[{ total }]] = await db.query(countStr, queryParams);
-  const [rows] = await db.query(queryStr, [...queryParams, Number(limit), Number(offset)]);
+  const queryCountParams = [...queryParams];
+
+  if (limit !== null && limit !== undefined && Number(limit) > 0) {
+    const validPage = Number(page) > 0 ? Number(page) : 1;
+    const offset = (validPage - 1) * Number(limit);
+    queryStr += ' LIMIT ? OFFSET ?';
+    queryParams.push(Number(limit), Number(offset));
+  }
+
+  const [[{ total }]] = await db.query(countStr, queryCountParams);
+  const [rows] = await db.query(queryStr, queryParams);
   
   return {
     data: rows,
     meta: {
       total,
-      page: Number(page),
-      limit: Number(limit),
-      totalPages: Math.ceil(total / limit)
+      page: limit ? Number(page || 1) : 1,
+      limit: limit ? Number(limit) : total,
+      totalPages: limit ? Math.ceil(total / Number(limit)) : 1
     }
   };
 };
